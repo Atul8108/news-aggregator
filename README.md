@@ -107,7 +107,7 @@ CACHE_TTL_SECONDS=600
 - **Errors are thrown, not sent.** `createError(status, message)` builds an error flagged `isOperational`. Validators, controllers and middleware throw it, and the error middleware turns it into a JSON response. Anything without the flag becomes a generic 500, so internal messages never reach the client.
 - **Functions over classes for errors.** `createError` and the `isHttpError` type guard replace an error class.
 - **`asyncHandler` wrapper.** Express 4 does not catch rejected promises, so async controllers are wrapped and rejections are forwarded to the error middleware.
-- **Consistent error shape.** Every error response is `{ "error": "message" }`, including unknown routes (404) and malformed JSON (400).
+- **Consistent error shape.** Every error response is `{ "status": "error", "error": "message" }` and every success carries `"status": "success"`, including unknown routes (404) and malformed JSON (400).
 
 ## Planned API
 

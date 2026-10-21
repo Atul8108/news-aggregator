@@ -1,4 +1,5 @@
 import { createError } from '../utils/appError';
+import { eHttpStatusCode } from '../enums/server.enums';
 import { SignupInput } from '../interfaces/user.interface';
 import {
     EMAIL_MAX,
@@ -13,31 +14,31 @@ import {
 
 const requireString = (value: unknown, field: string): string => {
     if (typeof value !== 'string') {
-        throw createError(400, `${field} is required and must be a string`);
+        throw createError(eHttpStatusCode.BAD_REQUEST, `${field} is required and must be a string`);
     }
     return value;
 };
 
 const requireLength = (value: string, field: string, min: number, max: number): string => {
     if (value.length < min || value.length > max) {
-        throw createError(400, `${field} must be between ${min} and ${max} characters`);
+        throw createError(eHttpStatusCode.BAD_REQUEST, `${field} must be between ${min} and ${max} characters`);
     }
     return value;
 };
 
 const requireObject = (body: unknown): Record<string, unknown> => {
     if (typeof body !== 'object' || body === null || Array.isArray(body)) {
-        throw createError(400, 'Request body must be a JSON object');
+        throw createError(eHttpStatusCode.BAD_REQUEST, 'Request body must be a JSON object');
     }
     return body as Record<string, unknown>;
 };
 
 export const validatePreferences = (value: unknown): string[] => {
     if (!Array.isArray(value)) {
-        throw createError(400, 'preferences is required and must be an array of strings');
+        throw createError(eHttpStatusCode.BAD_REQUEST, 'preferences is required and must be an array of strings');
     }
     if (value.length > PREFERENCES_MAX_COUNT) {
-        throw createError(400, `preferences can have at most ${PREFERENCES_MAX_COUNT} items`);
+        throw createError(eHttpStatusCode.BAD_REQUEST, `preferences can have at most ${PREFERENCES_MAX_COUNT} items`);
     }
     const cleaned = value.map((item) => {
         const text = requireString(item, 'each preference').trim().toLowerCase();
@@ -51,14 +52,14 @@ export const validateSignup = (body: unknown): SignupInput => {
 
     const unknown = Object.keys(data).find((key) => !SIGNUP_FIELDS.includes(key));
     if (unknown) {
-        throw createError(400, `Unknown field: ${unknown}`);
+        throw createError(eHttpStatusCode.BAD_REQUEST, `Unknown field: ${unknown}`);
     }
 
     const name = requireLength(requireString(data.name, 'name').trim(), 'name', 1, NAME_MAX);
 
     const email = requireLength(requireString(data.email, 'email').trim().toLowerCase(), 'email', 1, EMAIL_MAX);
     if (!EMAIL_PATTERN.test(email)) {
-        throw createError(400, 'email must be a valid email address');
+        throw createError(eHttpStatusCode.BAD_REQUEST, 'email must be a valid email address');
     }
 
     const password = requireLength(requireString(data.password, 'password'), 'password', PASSWORD_MIN, PASSWORD_MAX);
