@@ -1,17 +1,14 @@
-const express = require('express');
+import express = require('express');
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.listen(port, (err) => {
-    if (err) {
-        return console.log('Something bad happened', err);
-    }
+app.listen(port, () => {
     console.log(`Server is listening on ${port}`);
+}).on('error', (err) => {
+    console.log('Something bad happened', err);
 });
 
-
-
-module.exports = app;
+export = app;
