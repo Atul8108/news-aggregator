@@ -1,12 +1,14 @@
 import { createError } from '../utils/appError';
 import { eHttpStatusCode } from '../enums/server.enums';
-import { SignupInput } from '../interfaces/user.interface';
+import { LoginInput, SignupInput } from '../interfaces/user.interface';
 import {
     EMAIL_MAX,
     EMAIL_PATTERN,
+    LOGIN_FIELDS,
     NAME_MAX,
     PASSWORD_MAX,
     PASSWORD_MIN,
+    PREFERENCES_UPDATE_FIELDS,
     PREFERENCE_MAX_LENGTH,
     PREFERENCES_MAX_COUNT,
     SIGNUP_FIELDS,
@@ -67,4 +69,29 @@ export const validateSignup = (body: unknown): SignupInput => {
     const preferences = data.preferences === undefined ? [] : validatePreferences(data.preferences);
 
     return { name, email, password, preferences };
+};
+
+export const validateLogin = (body: unknown): LoginInput => {
+    const data = requireObject(body);
+
+    const unknown = Object.keys(data).find((key) => !LOGIN_FIELDS.includes(key));
+    if (unknown) {
+        throw createError(eHttpStatusCode.BAD_REQUEST, `Unknown field: ${unknown}`);
+    }
+
+    const email = requireString(data.email, 'email').trim().toLowerCase();
+    const password = requireString(data.password, 'password');
+
+    return { email, password };
+};
+
+export const validatePreferencesUpdate = (body: unknown): string[] => {
+    const data = requireObject(body);
+
+    const unknown = Object.keys(data).find((key) => !PREFERENCES_UPDATE_FIELDS.includes(key));
+    if (unknown) {
+        throw createError(eHttpStatusCode.BAD_REQUEST, `Unknown field: ${unknown}`);
+    }
+
+    return validatePreferences(data.preferences);
 };

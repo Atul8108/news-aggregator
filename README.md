@@ -10,12 +10,12 @@ Work in progress. The project is built step by step; the table shows what exists
 | --- | --- |
 | TypeScript setup | Done |
 | User types and in-memory user store | Done |
-| Signup and login (bcrypt, JWT) | Planned |
-| Auth middleware | Planned |
-| Preferences endpoints | Planned |
+| Signup and login (bcrypt, JWT) | Done |
+| Auth middleware | Done |
+| Preferences endpoints | Done |
 | News endpoint with external API | Planned |
-| Error handling foundation (errors, async wrapper, 404 and error middleware) | Done, not yet wired into app.ts |
-| Input validation | Planned |
+| Error handling foundation (errors, async wrapper, 404 and error middleware) | Done |
+| Input validation | Done for signup, login and preferences |
 | Caching | Planned |
 
 ## Tech Stack
@@ -38,6 +38,8 @@ news-aggregator-api/
 ├── app.ts                  # Express app setup, exported for the tests
 ├── tsconfig.json
 ├── src/
+│   ├── config/
+│   │   └── env.ts
 │   ├── consts/
 │   ├── controllers/
 │   ├── db/

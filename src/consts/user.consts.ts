@@ -6,3 +6,5 @@ export const PREFERENCES_MAX_COUNT = 20;
 export const PREFERENCE_MAX_LENGTH = 50;
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const SIGNUP_FIELDS = ['name', 'email', 'password', 'preferences'];
+export const LOGIN_FIELDS = ['email', 'password'];
+export const PREFERENCES_UPDATE_FIELDS = ['preferences'];
