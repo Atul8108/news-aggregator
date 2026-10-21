@@ -1,0 +1,8 @@
+export const NAME_MAX = 100;
+export const EMAIL_MAX = 254;
+export const PASSWORD_MIN = 8;
+export const PASSWORD_MAX = 72;
+export const PREFERENCES_MAX_COUNT = 20;
+export const PREFERENCE_MAX_LENGTH = 50;
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const SIGNUP_FIELDS = ['name', 'email', 'password', 'preferences'];

@@ -8,3 +8,10 @@ export interface User {
 }
 
 export type NewUser = Omit<User, 'id' | 'createdAt'>;
+
+export interface SignupInput {
+    name: string;
+    email: string;
+    password: string;
+    preferences: string[];
+}

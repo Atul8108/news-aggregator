@@ -1,0 +1,69 @@
+import { createError } from '../utils/appError';
+import { SignupInput } from '../interfaces/user.interface';
+import {
+    EMAIL_MAX,
+    EMAIL_PATTERN,
+    NAME_MAX,
+    PASSWORD_MAX,
+    PASSWORD_MIN,
+    PREFERENCE_MAX_LENGTH,
+    PREFERENCES_MAX_COUNT,
+    SIGNUP_FIELDS,
+} from '../consts/user.consts';
+
+const requireString = (value: unknown, field: string): string => {
+    if (typeof value !== 'string') {
+        throw createError(400, `${field} is required and must be a string`);
+    }
+    return value;
+};
+
+const requireLength = (value: string, field: string, min: number, max: number): string => {
+    if (value.length < min || value.length > max) {
+        throw createError(400, `${field} must be between ${min} and ${max} characters`);
+    }
+    return value;
+};
+
+const requireObject = (body: unknown): Record<string, unknown> => {
+    if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+        throw createError(400, 'Request body must be a JSON object');
+    }
+    return body as Record<string, unknown>;
+};
+
+export const validatePreferences = (value: unknown): string[] => {
+    if (!Array.isArray(value)) {
+        throw createError(400, 'preferences is required and must be an array of strings');
+    }
+    if (value.length > PREFERENCES_MAX_COUNT) {
+        throw createError(400, `preferences can have at most ${PREFERENCES_MAX_COUNT} items`);
+    }
+    const cleaned = value.map((item) => {
+        const text = requireString(item, 'each preference').trim().toLowerCase();
+        return requireLength(text, 'each preference', 1, PREFERENCE_MAX_LENGTH);
+    });
+    return [...new Set(cleaned)];
+};
+
+export const validateSignup = (body: unknown): SignupInput => {
+    const data = requireObject(body);
+
+    const unknown = Object.keys(data).find((key) => !SIGNUP_FIELDS.includes(key));
+    if (unknown) {
+        throw createError(400, `Unknown field: ${unknown}`);
+    }
+
+    const name = requireLength(requireString(data.name, 'name').trim(), 'name', 1, NAME_MAX);
+
+    const email = requireLength(requireString(data.email, 'email').trim().toLowerCase(), 'email', 1, EMAIL_MAX);
+    if (!EMAIL_PATTERN.test(email)) {
+        throw createError(400, 'email must be a valid email address');
+    }
+
+    const password = requireLength(requireString(data.password, 'password'), 'password', PASSWORD_MIN, PASSWORD_MAX);
+
+    const preferences = data.preferences === undefined ? [] : validatePreferences(data.preferences);
+
+    return { name, email, password, preferences };
+};
