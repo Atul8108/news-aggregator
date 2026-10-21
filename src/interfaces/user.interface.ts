@@ -3,7 +3,7 @@ export interface User {
     name: string;
     email: string;
     passwordHash: string;
-    preferences: [];
+    preferences: string[];
     createdAt: string;
 }
 
