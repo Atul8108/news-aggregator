@@ -106,8 +106,8 @@ CACHE_TTL_SECONDS=600
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| POST | `/users/signup` | No | Register a new user |
-| POST | `/users/login` | No | Log in and receive a JWT |
+| POST | `/users/signup` (alias `/register`) | No | Register a new user |
+| POST | `/users/login` (alias `/login`) | No | Log in and receive a JWT |
 
 Signup body:
 
@@ -130,8 +130,8 @@ Login response:
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/users/preferences` | Bearer token | Get the user's preferences |
-| PUT | `/users/preferences` | Bearer token | Replace the user's preferences |
+| GET | `/users/preferences` (alias `/preferences`) | Bearer token | Get the user's preferences |
+| PUT | `/users/preferences` (alias `/preferences`) | Bearer token | Replace the user's preferences |
 
 ### News
 
@@ -140,6 +140,8 @@ Login response:
 | GET | `/news` | Bearer token | Fetch news matching the user's preferences |
 
 Protected requests send the token as `Authorization: Bearer <jwt>`.
+
+The organisation's test suite calls the `/users/...` paths, while the written task names `/register`, `/login` and `/preferences`. Both are served by the same handlers.
 
 ### Status Codes
 
