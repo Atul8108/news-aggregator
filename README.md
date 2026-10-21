@@ -11,6 +11,9 @@ A RESTful API for a personalized news aggregator built with **Node.js**, **Expre
 - Input validation that rejects missing, mistyped and unknown fields
 - Consistent JSON error responses
 - In-memory caching of news results with a configurable TTL
+- Background cache refresh for recently requested queries
+- Mark articles as read or favorite, and list them
+- Keyword search across news
 
 ## Tech Stack
 
@@ -29,9 +32,11 @@ A RESTful API for a personalized news aggregator built with **Node.js**, **Expre
 
 ```
 news-aggregator-api/
-├── app.ts                       # Express app setup, exported for the tests
+├── app.ts                       # Re-exports the Express app for the tests
 ├── tsconfig.json
 ├── src/
+│   ├── app.ts                   # Express app setup (no listen)
+│   ├── server.ts                # Starts the server and the cache refresh
 │   ├── config/
 │   │   └── env.ts               # Environment variables
 │   ├── consts/
@@ -41,6 +46,7 @@ news-aggregator-api/
 │   │   ├── news.controller.ts
 │   │   └── user.controller.ts
 │   ├── db/
+│   │   ├── articleStore.ts      # Article lookup, read and favorite state
 │   │   └── userStore.ts         # In-memory user store
 │   ├── enums/
 │   │   └── server.enums.ts      # Response status and HTTP status codes
@@ -91,7 +97,10 @@ JWT_SECRET=your_secret_here
 JWT_EXPIRES_IN=1h
 NEWS_API_KEY=your_gnews_api_key
 CACHE_TTL_SECONDS=600
+CACHE_REFRESH_SECONDS=600
 ```
+
+`CACHE_REFRESH_SECONDS` is how often the background job refreshes recently requested queries. Set it to `0` to turn the refresh off. Keep it at or above the TTL to stay inside the GNews free-tier limits (100 requests a day, one per second).
 
 ### Scripts
 
@@ -179,7 +188,7 @@ Response:
 | --- | --- | --- | --- |
 | GET | `/news` | Bearer token | Fetch news matching the user's preferences |
 
-Optional query parameters: `language` (2 letters, default `en`) and `limit` (1 to 10, default 10). Any other parameter returns 400.
+Optional query parameters: `language` (2 letters, default `en`) and `limit` (1 to 10, default 10). Any other parameter returns 400. The same parameters work on `/news/search/:keyword`.
 
 Response:
 
@@ -200,6 +209,18 @@ Response:
 }
 ```
 
+### Read, favorites and search
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/news/:id/read` | Bearer token | Mark an article as read |
+| POST | `/news/:id/favorite` | Bearer token | Mark an article as a favorite |
+| GET | `/news/read` | Bearer token | List the user read articles |
+| GET | `/news/favorites` | Bearer token | List the user favorite articles |
+| GET | `/news/search/:keyword` | Bearer token | Search news by keyword |
+
+`:id` is the `id` field of an article returned by `/news` or `/news/search/:keyword`. A malformed id returns 400, and an id the server has not returned returns 404. Marking an article twice is allowed. The marking endpoints return `{ "status": "success", "article": { ... } }`, and the list endpoints return `{ "status": "success", "news": [ ... ] }`.
+
 ### Errors
 
 Every error uses the same shape:
@@ -213,7 +234,7 @@ Every error uses the same shape:
 | 200 | Success |
 | 400 | Invalid or missing input, unknown field, or malformed JSON |
 | 401 | Missing, invalid or expired token, or wrong credentials |
-| 404 | Route not found |
+| 404 | Route or article not found |
 | 409 | Email already registered |
 | 429 | News provider rate limit reached |
 | 500 | Server error or news service not configured |
@@ -231,6 +252,8 @@ Every error uses the same shape:
 
 Successful news responses are cached in memory for `CACHE_TTL_SECONDS`. Repeat requests within that window are served from the cache, which keeps usage under GNews's free-tier limit. Errors are never cached.
 
+A background job refreshes cached queries that were requested within the last refresh interval, so active queries stay warm and idle ones expire. The job starts from `src/server.ts` only, so it never runs during tests.
+
 ## Design Decisions
 
 - **Module-level store.** `src/db/userStore.ts` keeps its data in a private module variable and exports plain functions. A module is already a singleton in Node, so no class or static instance is needed.
@@ -245,6 +268,8 @@ Successful news responses are cached in memory for `CACHE_TTL_SECONDS`. Repeat r
 - **`asyncHandler` wrapper.** Express 4 does not catch rejected promises, so async controllers are wrapped and rejections are forwarded to the error middleware.
 - **Provider errors are masked.** Failures from GNews become a generic 502 or 429, so the API key and upstream details never reach the client.
 - **Stable article ids.** Each article id is a hash of its URL, since GNews provides none.
+- **Article snapshots.** Read and favorite lists keep a copy of the article when it is marked, so they survive cache expiry.
+- **App and server split.** `src/app.ts` builds the app without listening, and `src/server.ts` starts it and the refresh job. The tests import the app without binding a port.
 
 ## Author
 

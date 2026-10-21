@@ -1,4 +1,12 @@
-import { DEFAULT_LANGUAGE, DEFAULT_LIMIT, LANGUAGE_PATTERN, MAX_LIMIT, NEWS_QUERY_FIELDS } from '../consts/news.consts';
+import {
+    ARTICLE_ID_PATTERN,
+    DEFAULT_LANGUAGE,
+    DEFAULT_LIMIT,
+    KEYWORD_MAX,
+    LANGUAGE_PATTERN,
+    MAX_LIMIT,
+    NEWS_QUERY_FIELDS,
+} from '../consts/news.consts';
 import { eHttpStatusCode } from '../enums/server.enums';
 import { NewsQuery } from '../interfaces/news.interface';
 import { createError } from '../utils/appError';
@@ -27,4 +35,22 @@ export const validateNewsQuery = (query: Record<string, unknown>): NewsQuery => 
     }
 
     return { language, limit };
+};
+
+export const validateArticleId = (id: unknown): string => {
+    if (typeof id !== 'string' || !ARTICLE_ID_PATTERN.test(id)) {
+        throw createError(eHttpStatusCode.BAD_REQUEST, 'Article id must be a 16-character hex string');
+    }
+    return id;
+};
+
+export const validateKeyword = (keyword: unknown): string => {
+    if (typeof keyword !== 'string') {
+        throw createError(eHttpStatusCode.BAD_REQUEST, 'keyword is required');
+    }
+    const cleaned = keyword.trim();
+    if (cleaned.length < 1 || cleaned.length > KEYWORD_MAX) {
+        throw createError(eHttpStatusCode.BAD_REQUEST, `keyword must be between 1 and ${KEYWORD_MAX} characters`);
+    }
+    return cleaned;
 };
