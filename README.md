@@ -14,7 +14,8 @@ Work in progress. The project is built step by step; the table shows what exists
 | Auth middleware | Planned |
 | Preferences endpoints | Planned |
 | News endpoint with external API | Planned |
-| Validation and error handling | Planned |
+| Error handling foundation (errors, async wrapper, 404 and error middleware) | Done, not yet wired into app.ts |
+| Input validation | Planned |
 | Caching | Planned |
 
 ## Tech Stack
@@ -45,8 +46,12 @@ news-aggregator-api/
 │   ├── interfaces/
 │   │   └── user.interface.ts
 │   ├── middlewares/
+│   │   ├── errorHandler.ts
+│   │   └── notFound.ts
 │   ├── routes/
 │   ├── utils/
+│   │   ├── appError.ts
+│   │   └── asyncHandler.ts
 │   └── validators/
 └── test/
     └── server.test.js      # Provided test suite, do not modify
@@ -99,6 +104,10 @@ CACHE_TTL_SECONDS=600
 - **Normalised emails.** Emails are lowercased on create and on lookup.
 - **Real types.** Shared types live in `src/interfaces` as TypeScript files, replacing JSDoc typedefs.
 - **Mongoose-shaped store.** The store exposes `findByEmail`, `findById`, `createUser` and `updateUserPreferences`, so replacing it with a database later means replacing one file.
+- **Errors are thrown, not sent.** `createError(status, message)` builds an error flagged `isOperational`. Validators, controllers and middleware throw it, and the error middleware turns it into a JSON response. Anything without the flag becomes a generic 500, so internal messages never reach the client.
+- **Functions over classes for errors.** `createError` and the `isHttpError` type guard replace an error class.
+- **`asyncHandler` wrapper.** Express 4 does not catch rejected promises, so async controllers are wrapped and rejections are forwarded to the error middleware.
+- **Consistent error shape.** Every error response is `{ "error": "message" }`, including unknown routes (404) and malformed JSON (400).
 
 ## Planned API
 
